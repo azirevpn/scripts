@@ -28,8 +28,11 @@ set -e
 type curl >/dev/null || die "Please install curl and then try again."
 type jq >/dev/null || die "Please install jq and then try again."
 
+PASS_TYPE=password
+[[ $1 == --token ]] && PASS_TYPE=token
+
 read -p "[?] Please enter your AzireVPN username: " -r USER
-read -p "[?] Please enter your AzireVPN password: " -rs PASS
+read -p "[?] Please enter your AzireVPN $PASS_TYPE: " -rs PASS
 echo
 
 declare -A SERVER_ENDPOINTS
@@ -62,7 +65,7 @@ for CODE in "${SERVER_CODES[@]}"; do
 		echo "[+] Using existing $CODE private key."
 	fi
 	echo "[+] Contacting AzireVPN API in ${SERVER_LOCATIONS[$CODE]}."
-	RESPONSE="$(curl -LsS -d username="$USER" --data-urlencode password="$PASS" --data-urlencode pubkey="$(wg pubkey <<<"$PRIVATE_KEY")" "${SERVER_ENDPOINTS[$CODE]}")" || die "Unable to connect to AzireVPN API."
+	RESPONSE="$(curl -LsS -d username="$USER" --data-urlencode "$PASS_TYPE=$PASS" --data-urlencode pubkey="$(wg pubkey <<<"$PRIVATE_KEY")" "${SERVER_ENDPOINTS[$CODE]}")" || die "Unable to connect to AzireVPN API."
 	FIELDS="$(jq -r '.status,.message' <<<"$RESPONSE")" || die "Unable to parse response."
 	IFS=$'\n' read -r -d '' STATUS MESSAGE <<<"$FIELDS" || true
 	if [[ $STATUS != success ]]; then
