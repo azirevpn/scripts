@@ -1,18 +1,7 @@
-#!/bin/bash
+#!/usr/bin/env bash
+# SPDX-License-Identifier: GPL-2.0
 #
-# Copyright (C) 2016-2017 Jason A. Donenfeld <Jason@zx2c4.com>. All Rights Reserved.
-#
-# This file is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License version 2
-# as published by the Free Software Foundation.
-#
-# This file is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this file. If not, see <http://www.gnu.org/licenses/>.
+# Copyright (C) 2016-2018 Jason A. Donenfeld <Jason@zx2c4.com>. All Rights Reserved.
 
 die() {
 	echo "[-] Error: $1" >&2
@@ -21,8 +10,11 @@ die() {
 
 PROGRAM="${0##*/}"
 ARGS=( "$@" )
-SELF="$(readlink -f "${BASH_SOURCE[0]}")"
+SELF="${BASH_SOURCE[0]}"
+SELF="$(cd "${SELF%/*}" && pwd -P)/${SELF##*/}"
 [[ $UID == 0 ]] || exec sudo -p "[?] $PROGRAM must be run as root. Please enter the password for %u to continue: " "$SELF" "${ARGS[@]}"
+
+[[ ${BASH_VERSINFO[0]} -ge 4 ]] || die "bash ${BASH_VERSINFO[0]} detected, when bash 4+ required"
 
 set -e
 type curl >/dev/null || die "Please install curl and then try again."
