@@ -37,8 +37,8 @@ RESPONSE="$(curl -LsS https://api.azirevpn.com/v1/locations)" || die "Unable to 
 FIELDS="$(jq -r '.locations[] | select(.endpoints.wireguard) | .name,.city,.country,.endpoints.wireguard' <<<"$RESPONSE")" || die "Unable to parse response."
 while read -r CODE && read -r CITY && read -r COUNTRY && read -r ENDPOINT; do
 	SERVER_CODES+=( "$CODE" )
-	SERVER_LOCATIONS[$CODE]="$CITY, $COUNTRY"
-	SERVER_ENDPOINTS[$CODE]="$ENDPOINT"
+	SERVER_LOCATIONS["$CODE"]="$CITY, $COUNTRY"
+	SERVER_ENDPOINTS["$CODE"]="$ENDPOINT"
 done <<<"$FIELDS"
 
 for CODE in "${SERVER_CODES[@]}"; do
@@ -57,7 +57,7 @@ for CODE in "${SERVER_CODES[@]}"; do
 	else
 		echo "[+] Using existing $CODE private key."
 	fi
-	echo "[+] Contacting AzireVPN API in ${SERVER_LOCATIONS[$CODE]}."
+	echo "[+] Contacting AzireVPN API in ${SERVER_LOCATIONS["$CODE"]}."
 	RESPONSE="$(curl -LsS -d username="$USER" --data-urlencode "$PASS_TYPE=$PASS" --data-urlencode pubkey="$(wg pubkey <<<"$PRIVATE_KEY")" "${SERVER_ENDPOINTS[$CODE]}")" || die "Unable to connect to AzireVPN API."
 	FIELDS="$(jq -r '.status,.message' <<<"$RESPONSE")" || die "Unable to parse response."
 	IFS=$'\n' read -r -d '' STATUS MESSAGE <<<"$FIELDS" || true
@@ -92,6 +92,6 @@ done
 
 echo "[+] Success. The following commands may be run for connecting to AzireVPN:"
 for CODE in "${SERVER_CODES[@]}"; do
-	echo "- ${SERVER_LOCATIONS[$CODE]}:"
+	echo "- ${SERVER_LOCATIONS["$CODE"]}:"
 	echo "  \$ wg-quick up azirevpn-$CODE"
 done
